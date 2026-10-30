@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="手冲咖啡">
+  <rect width="320" height="200" fill="#f4dfe7"/>
+  <rect y="148" width="320" height="52" fill="#111216"/>
+  <ellipse cx="160" cy="152" rx="94" ry="20" fill="#111216"/>
+  <ellipse cx="160" cy="146" rx="58" ry="10" fill="#de6f94" opacity=".6"/>
+  <path d="M108 79h91l-10 59c-2 13-13 22-26 22h-20c-13 0-24-9-26-22Z" fill="#111216"/>
+  <path d="M199 91c34-4 38 43 4 46" fill="none" stroke="#111216" stroke-width="10" stroke-linecap="round"/>
+  <path d="M137 64c-10-12 9-17 0-29M163 64c-10-12 9-17 0-29" fill="none" stroke="#de6f94" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="251" cy="157" r="17" fill="#de6f94"/>
+  <path d="M245 157h12M251 151v12" stroke="#111216" stroke-width="2" stroke-linecap="round"/>
+</svg>

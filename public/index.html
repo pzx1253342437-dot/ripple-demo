@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111216">
+  <title>涟漪 · 附近交友</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/profile.css">
+</head>
+<body>
+  <div class="page-glow page-glow-one"></div>
+  <div class="page-glow page-glow-two"></div>
+
+  <div class="app-shell" id="app">
+    <div id="map" aria-label="附近的涟漪地图"></div>
+    <div class="map-warmth"></div>
+    <div class="map-grain" aria-hidden="true"></div>
+    <canvas class="wave-canvas" id="waveCanvas" aria-hidden="true"></canvas>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><i></i>
+        </div>
+        <div class="brand-copy">
+          <h1>涟漪</h1>
+          <p>附近交友</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="online-pill"><span class="online-dot"></span><span id="onlineCount">0</span> 人在线</div>
+        <button class="round-button" id="moreBtn" type="button" aria-label="打开设置">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <nav class="mode-tabs" id="modeTabs" aria-label="选择范围"></nav>
+
+    <div class="map-status">
+      <span id="statusLine">连接中…</span>
+      <span class="map-badge" id="mapBadge">街道</span>
+    </div>
+
+    <button class="wave-feed hidden" id="waveFeed" type="button" aria-label="查看完整波纹">
+      <span class="wave-feed-radar" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="wave-feed-copy">
+        <small id="waveFeedLabel">扩散中</small>
+        <strong id="waveFeedText">0 m · 0:00</strong>
+      </span>
+      <span class="wave-feed-link" id="waveFeedAction">查看范围</span>
+    </button>
+
+    <div class="map-controls" aria-label="地图控制">
+      <button class="map-control" id="zoomIn" type="button" aria-label="放大地图">+</button>
+      <button class="map-control" id="zoomOut" type="button" aria-label="缩小地图">−</button>
+      <button class="map-control map-control-wide" id="fitWave" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M6.5 12a5.5 5.5 0 0 1 5.5-5.5M12 6.5a5.5 5.5 0 0 1 5.5 5.5"/></svg>
+        查看范围
+      </button>
+      <button class="map-control map-control-wide" id="recenter" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+        回到位置
+      </button>
+    </div>
+
+    <div class="map-notice hidden" id="mapNotice">地图未加载，配对正常。</div>
+
+    <div class="float-tools" id="floatTools">
+      <div class="speed-cluster">
+        <button class="float-tool speed-tool" id="speedBtn" type="button" aria-expanded="false" aria-haspopup="true">
+          <span class="speed-orbit" aria-hidden="true"><i></i><i></i></span>
+          <span class="float-tool-copy">
+            <small>演示速度</small>
+            <strong id="speedValue">10×</strong>
+          </span>
+        </button>
+        <div class="speed-menu hidden" id="speedMenu" role="menu" aria-label="选择演示速度">
+          <button type="button" data-speed="1" role="menuitem"><strong>1×</strong><small>真实时间</small></button>
+          <button type="button" data-speed="2" role="menuitem"><strong>2×</strong><small>慢速演示</small></button>
+          <button type="button" data-speed="5" role="menuitem"><strong>5×</strong><small>平衡</small></button>
+          <button type="button" data-speed="10" role="menuitem"><strong>10×</strong><small>快速演示</small></button>
+        </div>
+      </div>
+
+      <button class="float-tool game-tool" id="towerBtn" type="button" aria-expanded="false">
+        <span class="mini-tower" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="float-tool-copy">
+          <small>小游戏</small>
+          <strong>叠楼</strong>
+        </span>
+      </button>
+    </div>
+
+    <section class="tower-game hidden" id="towerGame" aria-label="叠楼小游戏">
+      <div class="tower-head">
+        <div>
+          <p class="eyebrow">小游戏</p>
+          <h3>叠楼</h3>
+          <p class="tower-subline">每层加速 · 未接住结束</p>
+        </div>
+        <span class="tower-best" id="towerBest">最高 0 层</span>
+        <button class="round-button tower-close" id="towerClose" type="button" aria-label="关闭叠楼小游戏">×</button>
+      </div>
+      <div class="tower-stage">
+        <canvas id="towerCanvas" width="520" height="460" aria-label="叠楼游戏画面"></canvas>
+        <div class="tower-score"><span>已叠</span><strong id="towerFloors">0</strong><span>层</span></div>
+      </div>
+      <p class="tower-message" id="towerMessage">点击放下第一层。</p>
+      <div class="tower-actions">
+        <button class="primary-button" id="towerDrop" type="button">放下这一层</button>
+      </div>
+    </section>
+
+    <section class="bottom-sheet" id="sheet">
+      <div class="sheet-grab" aria-hidden="true"></div>
+      <div class="sheet-heading">
+        <div>
+          <p class="eyebrow" id="waveEyebrow">当前状态</p>
+          <h2 id="waveState">投波</h2>
+        </div>
+        <span class="mode-dot" id="modeDot" aria-hidden="true"></span>
+      </div>
+
+      <div class="wave-metrics">
+        <div class="metric"><span>半径</span><strong id="waveRadius">0 m</strong></div>
+        <div class="metric"><span>用时</span><strong id="waveTime">0:00</strong></div>
+        <div class="metric"><span>确认时间</span><strong>2 秒</strong></div>
+      </div>
+
+      <div class="wave-progress"><div id="waveBar"></div></div>
+
+      <div class="primary-actions">
+        <button class="primary-button" id="emitBtn" type="button">投波</button>
+        <button class="locate-button" id="geoBtn" type="button" aria-label="使用真实定位">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg>
+          <span>定位</span>
+        </button>
+      </div>
+
+      <div class="secondary-actions">
+        <button class="text-button" id="botBtn" type="button">添加演示用户</button>
+        <button class="text-button" id="detailsBtn" type="button">设置</button>
+      </div>
+
+      <div class="waiting-card hidden" id="waitingCard">
+        <div class="waiting-head">
+          <span>等待 · 6 题</span>
+          <span id="promptCount">01 / 06</span>
+        </div>
+        <div class="prompt-track" id="promptTrack" aria-hidden="true"></div>
+        <h3 id="promptQuestion"></h3>
+        <div class="prompt-choices" id="promptChoices"></div>
+        <p class="prompt-feedback hidden" id="promptFeedback"></p>
+        <button class="ghost-link prompt-next" id="nextPrompt" type="button">下一题</button>
+        <div class="prompt-result hidden" id="promptResult" aria-live="polite">
+          <p class="prompt-result-label">结果</p>
+          <h4 id="promptResultTitle"></h4>
+          <p id="promptResultBody"></p>
+          <div class="prompt-result-tags" id="promptResultTags"></div>
+          <p class="prompt-result-note">仅作互动参考。</p>
+          <button class="ghost-link prompt-restart" id="restartPrompt" type="button">重新测</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-screen" id="profileScreen" aria-hidden="true" inert>
+      <div class="profile-scroll">
+        <header class="profile-hero">
+          <div class="profile-hero-dots" aria-hidden="true"></div>
+          <div class="profile-bar">
+            <div>
+              <p class="profile-kicker">我的资料</p>
+              <h2>个人主页</h2>
+            </div>
+            <button class="profile-settings" id="profileSettings" type="button" aria-label="打开设置">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+          </div>
+
+          <div class="profile-identity">
+            <div class="profile-avatar">
+              <img src="/avatar-linwan.svg" alt="林晚头像" loading="lazy">
+              <span class="profile-presence" aria-label="在线"></span>
+            </div>
+            <div class="profile-main">
+              <div class="profile-name"><h3>林晚</h3><span>26</span></div>
+              <p>品牌设计 · 杭州</p>
+              <div class="profile-state"><i></i>刚刚活跃</div>
+            </div>
+          </div>
+
+          <div class="profile-stats">
+            <div><strong>36</strong><span>动态</span></div>
+            <div><strong>128</strong><span>关注</span></div>
+            <div><strong>482</strong><span>喜欢</span></div>
+          </div>
+        </header>
+
+        <div class="profile-content">
+          <div class="profile-tags" aria-label="兴趣标签">
+            <span>慢热</span>
+            <span>看展</span>
+            <span>手冲咖啡</span>
+            <span>周末徒步</span>
+          </div>
+
+          <section class="profile-card profile-about">
+            <div class="profile-card-head"><h3>关于我</h3><span>ABOUT</span></div>
+            <p>做品牌设计，平时在展馆、咖啡馆和西湖边来回。喜欢有话直说，也享受慢慢熟悉。</p>
+          </section>
+
+          <section class="profile-card">
+            <div class="profile-card-head"><h3>个人信息</h3><span>INFO</span></div>
+            <dl class="profile-facts">
+              <div><dt>身高</dt><dd>165 cm</dd></div>
+              <div><dt>学历</dt><dd>本科</dd></div>
+              <div><dt>家乡</dt><dd>宁波</dd></div>
+              <div><dt>宠物</dt><dd>有猫</dd></div>
+              <div><dt>期待</dt><dd>认真交往</dd></div>
+              <div><dt>作息</dt><dd>夜猫子</dd></div>
+            </dl>
+          </section>
+
+          <section class="profile-card profile-moments">
+            <div class="profile-card-head"><h3>动态</h3><span>3</span></div>
+            <div class="moment-list">
+              <article class="moment">
+                <img src="/moment-city.svg" alt="南山路傍晚" loading="lazy">
+                <div class="moment-copy">
+                  <time>10.26</time>
+                  <p>看完展，沿着南山路走了一圈。</p>
+                  <span>杭州 · 南山路</span>
+                </div>
+              </article>
+              <article class="moment">
+                <img src="/moment-coffee.svg" alt="手冲咖啡" loading="lazy">
+                <div class="moment-copy">
+                  <time>10.19</time>
+                  <p>新豆子，酸度刚好。</p>
+                  <span>家里</span>
+                </div>
+              </article>
+              <article class="moment">
+                <img src="/moment-trail.svg" alt="太子尖徒步" loading="lazy">
+                <div class="moment-copy">
+                  <time>10.12</time>
+                  <p>山顶风很大，云散得很快。</p>
+                  <span>临安 · 太子尖</span>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <nav class="bottom-nav" id="bottomNav" aria-label="主导航">
+      <button class="nav-item is-active" type="button" data-screen="match" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg>
+        <span>匹配</span>
+      </button>
+      <button class="nav-item" type="button" data-screen="profile">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4.1 3.4-6.5 7.5-6.5s7.5 2.4 7.5 6.5"/></svg>
+        <span>我的</span>
+      </button>
+    </nav>
+
+    <div class="drawer hidden" id="drawer" aria-hidden="true">
+      <div class="drawer-backdrop" id="drawerBackdrop"></div>
+      <div class="drawer-panel">
+        <div class="drawer-head">
+          <div><p class="eyebrow">偏好</p><h2>设置</h2></div>
+          <button class="round-button" id="closeDrawer" type="button" aria-label="关闭设置">×</button>
+        </div>
+
+        <div class="mode-summary">
+          <h3 id="modeName">小湖</h3>
+          <p id="modeDesc"></p>
+        </div>
+
+        <div class="stat-grid">
+          <div><span>波速</span><strong id="statSpeed">5 m/s</strong></div>
+          <div><span>静默区</span><strong id="statIgnore">1 km</strong></div>
+          <div><span>最大半径</span><strong id="statMax">5 km</strong></div>
+        </div>
+
+        <div class="encounter-note">
+          <strong>相遇规则</strong>
+          <span>20 秒内选择。双方都选“继续”，波才重新扩散。</span>
+        </div>
+
+        <label class="setting-toggle">
+          <span>显示附近的其他波</span>
+          <input id="debugToggle" type="checkbox">
+        </label>
+
+        <button class="secondary-button full-width" id="adjustBtn" type="button">在地图上选择位置</button>
+        <button class="secondary-button full-width" id="resetBtn" type="button">取消当前波</button>
+
+        <div class="log-box" id="log" aria-live="polite"></div>
+        <p class="privacy-note">位置仅发送到本机 Demo；底图由高德提供。</p>
+      </div>
+    </div>
+
+    <div class="toast hidden" id="toast" role="status"></div>
+
+    <div class="overlay hidden" id="contactOverlay">
+      <div class="contact-card">
+        <p class="eyebrow">波相遇</p>
+        <div class="contact-pair" aria-hidden="true">
+          <div class="soft-avatar me">你</div>
+          <div class="contact-heart"><span>♥</span></div>
+          <div class="soft-avatar other" id="contactAvatar">TA</div>
+        </div>
+        <h2>两圈波相遇</h2>
+        <p class="contact-lead">与 <strong id="contactName">对方</strong> 的波相遇。</p>
+
+        <div class="contact-stop"><i></i><span>波已暂停扩散</span></div>
+
+        <div class="contact-stats">
+          <div><span>距离</span><strong id="contactDistance">—</strong></div>
+          <div><span>用时</span><strong id="contactTime">—</strong></div>
+        </div>
+
+        <p class="contact-hint">双方都选继续，波才继续扩散。</p>
+
+        <div class="contact-actions">
+          <button class="secondary-button" id="skipContact" type="button">继续扩散</button>
+          <button class="primary-button" id="acceptContact" type="button">认识 TA</button>
+        </div>
+
+        <p class="contact-wait hidden" id="contactWait">已提交，等待对方。</p>
+        <p class="contact-countdown" id="contactCountdown">20 秒内选择</p>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="matchOverlay">
+      <div class="match-card">
+        <p class="eyebrow">配对成功</p>
+        <div class="match-heart" aria-hidden="true"><span>♥</span></div>
+        <h2>配对完成</h2>
+        <p class="match-lead">与 <strong id="matchName">对方</strong> 在 <strong id="matchDistance">—</strong> 处相遇。</p>
+
+        <div class="contact-stats">
+          <div><span>用时</span><strong id="matchTime">—</strong></div>
+          <div><span>方式</span><strong>双方接受</strong></div>
+        </div>
+
+        <p class="match-note" id="matchNote"></p>
+        <button class="primary-button" id="closeMatch" type="button">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
+

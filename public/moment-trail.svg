@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="太子尖徒步">
+  <rect width="320" height="200" fill="#111216"/>
+  <circle cx="242" cy="49" r="26" fill="#de6f94"/>
+  <path d="M0 154 66 82l48 48 46-74 62 96 48-51 50 53v46H0Z" fill="#25262c"/>
+  <path d="M0 164 72 129l46 17 66-34 56 28 80-35v95H0Z" fill="#18191f"/>
+  <path d="M0 183c65-24 126-27 189-8 47 14 86 10 131-6v31H0Z" fill="#de6f94" fill-opacity=".38"/>
+  <path d="M128 200c17-27 33-43 52-58 11-9 16-19 18-31" fill="none" stroke="#f1cdc0" stroke-width="3" stroke-linecap="round"/>
+  <path d="M38 50h53M73 61h38M214 79h47" stroke="#ffffff" stroke-opacity=".44" stroke-width="2" stroke-linecap="round"/>
+</svg>
